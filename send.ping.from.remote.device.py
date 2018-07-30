@@ -161,7 +161,7 @@ s.start()
 #SSH to remote device and send Pings.
 myIp = "192.168.1.1"
 sshRemoteUser = "root"
-sshRemotePwd = "Passw0rd!"
+sshRemotePwd = "thepassword"
 remoteCommand = "ping -c 1 192.168.1.99"
 timeOut = 0
 connection = ssh(myIp, sshRemoteUser, sshRemotePwd, timeOut)

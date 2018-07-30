@@ -6,10 +6,12 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.all import *
 import threading
 from threading import Thread
-import time
 import sys
 
 
+
+#Script created 7/12/18
+#Last modified 7/25/18
 #
 #This script uses SSH to connect to a remote device.
 #It then sends ICMP ping packets from it back to your pc.
@@ -21,26 +23,26 @@ import sys
 #
 #
 #
-#
 
 
 
 
-#Create an SSH client, connect to destination.
+#Setup SSH connection.
 class ssh:
     client = None
 
     def __init__(self, address, username, password, timeout):
-        print("Connecting to server.")
+        print("Sending pings...please wait")
+        print(" ")
 
         #Create a new SSH client.
         self.client = client.SSHClient()
 
-        #The following line is required if you want the script to be able to access servers that's not yet in the known_hosts file.
+        #The following line is required if you want the script to access servers that are not in the known_hosts file.
         self.client.set_missing_host_key_policy(client.AutoAddPolicy())
  
-        #Make the connection
-        self.client.connect("192.168.1.1", username="root", password="somepassword", look_for_keys="False", timeout=10)
+        #Make the connection.
+        self.client.connect("192.168.1.1", username="root", password="thepassword", look_for_keys="False", timeout=10)
 
 
     def sendCommand(self, command):
@@ -67,37 +69,82 @@ class ssh:
 
 
 
-def findicmppadding(payload):
-    for i in xrange(0, len(payload) - 2):
-        if (ord(payload[i]) == ord(payload[i+1]) - 1) and (ord(payload[i] == ord(payload[i+2]) - 2):
-            padding = payload[i:]
-            return (i, ord(padding[0]), len(padding))
-
-
-
-
 
 #Sniffing
 def sniffing():
     #sniff(iface='enp0s25', prn= lambda x: filter="icmp and host 192.168.1.1", store=0, count=10)
     sniff(iface='enp0s25', store=0, count=50, prn=icmpPayload)
-    #time.sleep(1)
 
 
 
 
 
 
-#Parse ICMP payload
+#Get the ICMP Echo Request
 def icmpPayload(pkt):
     for p in pkt:
         if ICMP in p:
             if pkt['ICMP'].type == 8:    #8=Echo Request
-                     try:
-                         paddingdesc = findicmppadding(pkt['ICMP'].load)
+                findicmprawloadlayer(pkt)
 
-                     execept AttributeError:
-                         pass
+
+
+
+
+#Get the ICMP Raw/Load layer.
+def findicmprawloadlayer(pkt):
+    payload = pkt.getlayer(Raw).load
+    findicmppadding(payload)
+
+
+
+
+
+#Get the Raw/Load layer's fingerprint. 
+def findicmppadding(payload):
+    for i in xrange(0, len(payload) - 2):
+        if (ord(payload[i]) == ord(payload[i+1]) - 1) and (ord(payload[i]) == (ord(payload[i+2]) - 2)):
+            payloadfirstcharhex = hex(ord(payload[i]))
+            payloadsecondcharhex = hex(ord(payload[i]) + 1)
+            payloadthirdcharhex = hex(ord(payload[i]) + 2)
+ 
+            payloadfirstchar = ord(payload[i])
+            payloadsecondchar = ord(payload[i]) + 1
+            payloadthirdchar = ord(payload[i]) + 2
+
+            print (" ")
+            print (" ")
+            print ("ICMP fingerprint leading characters.")
+            print (payloadfirstcharhex), (payloadsecondcharhex), (payloadthirdcharhex)
+            print (" ")
+
+
+
+            print (" ")
+            print (" ")
+            print ("ICMP fingerprint.")
+            payloadentire = (payload[i: ]).encode("HEX")
+            print payloadentire
+            print (" ")
+            print (" ")
+
+
+            icmppayload(payload)
+            exit()
+
+
+
+
+
+#Print the entire payload.
+def icmppayload(payload):
+    print (" ")
+    print ("ICMP full Raw layer.")
+    payload = str(payload).encode("HEX")
+    print (payload)
+    print (" ")
+    print (" ")
+    exit()
 
 
 
@@ -111,15 +158,15 @@ s.start()
 
 
 
-
 #SSH to remote device and send Pings.
 myIp = "192.168.1.1"
 sshRemoteUser = "root"
-sshRemotePwd = "somepassword"
-remoteCommand = "ping -c 1 192.168.1.2"
+sshRemotePwd = "Passw0rd!"
+remoteCommand = "ping -c 1 192.168.1.99"
 timeOut = 0
 connection = ssh(myIp, sshRemoteUser, sshRemotePwd, timeOut)
 connection.sendCommand(remoteCommand)
+
 
 
 exit()
